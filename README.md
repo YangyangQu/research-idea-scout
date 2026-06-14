@@ -1,43 +1,132 @@
-# Research Idea Scout
+# 🧭 IdeaScout
 
-**Research Idea Scout** is a configurable toolkit for screening large paper collections and identifying cross-domain ideas that may transfer to **your own research direction**.
+**Profile-Guided Cross-Domain Research Idea Discovery with LLMs**
 
-It is **not** a toolkit for one fixed topic. The intended workflow is:
+<p align="center">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.9%2B-blue">
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-green">
+  <img alt="Status" src="https://img.shields.io/badge/status-v0.1.0-orange">
+  <img alt="LLM" src="https://img.shields.io/badge/LLM-Codex%20CLI-purple">
+</p>
 
-```text
-Define your research profile
-→ filter a large paper pool with lightweight rules
-→ ask Codex to infer each paper's core idea
-→ score whether the idea transfers to your own task
-→ export ranked lists for manual reading
+---
+
+## ✨ What is IdeaScout?
+
+**IdeaScout helps researchers discover transferable research ideas from large paper collections.**
+
+Instead of only searching for papers that are already close to your topic, IdeaScout asks a different question:
+
+> **Can the core idea of this paper be transferred to my own research problem?**
+
+You define a **research profile** describing your task, preferred mechanisms, negative filters, and scoring dimensions. IdeaScout then filters papers and uses an LLM to infer each paper’s core idea and score whether it is useful for your research direction.
+
+It is designed for researchers who want to mine ideas from **other fields**, such as computer vision, NLP, multimodal learning, generative modeling, representation learning, robotics, privacy, interpretability, or speech processing.
+
+---
+
+## 🚀 Why use IdeaScout?
+
+Reading thousands of papers manually is impossible. Keyword search is also too limited, because many useful ideas come from papers that do **not** share your task keywords.
+
+IdeaScout is useful when you want to:
+
+* 🔍 Find **cross-domain ideas** for your own research problem.
+* 🧠 Discover mechanisms, not just related papers.
+* 🧩 Screen papers by **transferability**, **novelty**, and **implementation feasibility**.
+* 🗂️ Rank thousands of papers into a manageable reading list.
+* ⚙️ Customize the scoring criteria for your own project.
+* 🔁 Run long LLM-based scoring jobs with resume and auto-retry.
+
+---
+
+## 🧠 Core idea
+
+IdeaScout separates the process into two stages:
+
+1. **Rule-based candidate filtering**
+   Quickly filters a large paper collection using your profile keywords, preferred mechanisms, and negative filters.
+
+2. **LLM-based idea scoring**
+   For each candidate paper, an LLM reads the title and abstract, infers the core idea, and scores whether that idea can transfer to your research task.
+
+```mermaid
+flowchart LR
+    A[Large paper collection<br/>JSONL] --> B[Research profile<br/>YAML]
+    B --> C[Rule-based filtering]
+    A --> C
+    C --> D[Candidate papers]
+    D --> E[LLM idea scoring<br/>Codex CLI]
+    E --> F[Ranked idea list]
+    F --> G[Top papers for reading]
+    F --> H[CSV / JSONL export]
 ```
 
-The key design principle is: **reward transferable mechanisms, not keyword overlap**.
+---
 
-For example, a researcher working on speech privacy may look for ideas about latent editing, concept erasure, or temporal style transfer. A researcher working on visual domain generalization may look for ideas about invariant representations, style/content disentanglement, or test-time adaptation. The same code supports both by changing a YAML profile.
+## 🧩 What is a research profile?
+
+A profile is a YAML file that tells IdeaScout what kind of ideas you are looking for.
+
+For example, a researcher working on **medical image segmentation** may want ideas related to:
+
+* uncertainty estimation
+* domain adaptation
+* foundation model adaptation
+* weak supervision
+* annotation-efficient learning
+
+A researcher working on **robotics** may want ideas related to:
+
+* policy generalization
+* representation grounding
+* temporal abstraction
+* multimodal planning
+
+A researcher working on **speech privacy** may want ideas related to:
+
+* disentangled representations
+* selective attribute obfuscation
+* latent editing
+* adversarial leakage control
+
+The key point is:
+
+> **IdeaScout does not assume your research field. You define it.**
 
 ---
 
-## What this tool does
+## 📦 Installation
 
-Given a JSONL file of papers, each with at least `title` and `abstract`, this toolkit can:
+```bash
+git clone https://github.com/YOUR_USERNAME/idea-scout.git
+cd idea-scout
 
-1. Apply a lightweight rule-based filter using a user-defined profile.
-2. Ask Codex to infer each paper's **core idea** from title and abstract.
-3. Ask Codex to judge whether that idea can transfer to the user's research tasks.
-4. Produce compact scores, short explanations, and rankings.
-5. Resume automatically if interrupted.
-6. Wait on quota/rate-limit errors and stop cleanly on authentication errors.
-7. Export top-ranked papers to CSV for reading or browsing.
+python -m venv .venv
+source .venv/bin/activate
 
-It does **not** require the research direction to be speech, privacy, fairness, or accent conversion. Those are only example profiles.
+pip install -r requirements.txt
+```
 
----
+If you want to use Codex-based scoring, make sure the Codex CLI is available:
 
-## Repository structure
+```bash
+codex login --device-auth
+printf 'Reply only OK\n' | codex exec -
+```
+
+Expected output:
 
 ```text
-research-idea-scout/
+OK
+```
+
+---
+
+## 📁 Repository structure
+
+```text
+idea-scout/
 ├── README.md
 ├── LICENSE
 ├── pyproject.toml
@@ -68,58 +157,32 @@ research-idea-scout/
 
 ---
 
-## Installation
+## 📝 Input format
 
-```bash
-git clone https://github.com/YOUR_USERNAME/research-idea-scout.git
-cd research-idea-scout
+IdeaScout expects a JSONL file where each line is one paper.
 
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -U pip
-python -m pip install -e .
-```
-
-You also need the Codex CLI available on your system if you want LLM-based scoring:
-
-```bash
-codex login --device-auth
-printf 'Reply only OK\n' | codex exec -
-```
-
-If the test returns `OK`, Codex is ready.
-
----
-
-## Input format
-
-The input should be a JSONL file. Each line is one paper:
+Minimum required fields:
 
 ```json
-{"title":"Paper title","abstract":"Paper abstract","venue":"ICLR","year":2026,"url":"https://..."}
+{
+  "title": "A paper title",
+  "abstract": "The paper abstract.",
+  "venue": "ICLR",
+  "year": 2025,
+  "url": "https://example.com/paper"
+}
 ```
-
-Required fields:
-
-- `title`
-- `abstract`
-
-Recommended fields:
-
-- `venue`
-- `year`
-- `url` or `pdf_url`
-- `paper_id` or `doi`, if available
 
 Example:
 
-```bash
-head examples/example_input.jsonl
+```json
+{"title":"Representation Surgery for Concept Editing","abstract":"We propose a method for identifying and editing concept directions in neural representations...","venue":"ICLR","year":2025,"url":"https://example.com"}
+{"title":"Temporal Style Transfer for Motion Generation","abstract":"This paper introduces a temporal style factorization method for controllable motion generation...","venue":"CVPR","year":2026,"url":"https://example.com"}
 ```
 
 ---
 
-## Step 1: Write your own research profile
+## ⚙️ Step 1: Create your research profile
 
 Copy the template:
 
@@ -127,55 +190,80 @@ Copy the template:
 cp configs/profile_template.yaml configs/my_profile.yaml
 ```
 
-Then edit:
+Edit `configs/my_profile.yaml`.
+
+Example:
 
 ```yaml
-name: my_research_profile
+project_name: My Research Project
 
 description: >
-  Describe your research direction here.
+  I want to discover transferable ideas from cross-domain machine learning papers
+  that may help my own research problem.
 
 target_tasks:
-  - What task are you working on?
-  - What kind of ideas are you looking for?
-  - What would count as useful transfer?
+  - name: Main task
+    description: >
+      Describe your core research task here.
 
-prefer:
-  - Transferable mechanisms rather than surface topic similarity.
-  - Reusable representation, objective, architecture, editing, evaluation, or theory ideas.
+  - name: Secondary task
+    description: >
+      Describe another related task, if any.
 
-downweight:
-  - Generic benchmark/dataset/survey papers without a reusable mechanism.
+preferred_mechanisms:
+  - latent representation editing
+  - modular adapters
+  - cross-modal alignment
+  - controllable generation
+  - concept erasure
+  - temporal modeling
 
 positive_keywords:
-  - representation learning
-  - latent space
-  - controllable generation
-  - adapter
+  - representation editing
+  - disentanglement
   - subspace
-  - editing
+  - latent direction
+  - retrieval augmentation
+  - modular network
+  - adapter
+  - routing
+  - concept erasure
+  - controllable generation
 
 negative_keywords:
   - survey
-  - benchmark
-  - dataset
+  - benchmark only
+  - dataset only
+  - leaderboard
+  - pure application
 
 scoring_dimensions:
   - key: transferability_to_my_task
+    name: Transferability to my task
     description: Whether the paper's core idea can be adapted to my research task.
     weight: 2.0
-  - key: method_novelty
-    description: Whether the paper has a genuinely interesting method or theory idea.
-    weight: 1.2
-```
 
-The most important part is `scoring_dimensions`. These become the fields that Codex scores.
+  - key: method_novelty
+    name: Method novelty
+    description: Whether the paper contains a genuinely interesting method or theory idea.
+    weight: 1.2
+
+  - key: implementation_feasibility
+    name: Implementation feasibility
+    description: Whether the idea looks practical enough to implement or test.
+    weight: 1.0
+
+  - key: expected_research_value
+    name: Expected research value
+    description: Whether the idea could lead to a publishable research direction.
+    weight: 1.5
+```
 
 ---
 
-## Step 2: Optional rule-based filtering
+## 🔎 Step 2: Filter candidate papers
 
-If your paper pool is very large, first run a cheap filter:
+Run rule-based filtering:
 
 ```bash
 python scripts/filter_candidates.py \
@@ -188,40 +276,34 @@ python scripts/filter_candidates.py \
   --min-score 1.0
 ```
 
-If you already have a curated candidate list, you can skip this step.
+This produces:
+
+```text
+data/candidates.jsonl
+data/rejected.jsonl
+reports/filter_summary.json
+```
+
+The filtering step is fast and does not call an LLM.
 
 ---
 
-## Step 3: Test Codex scoring on one paper
+## 🤖 Step 3: Score papers with Codex
 
-Always test one paper before running thousands:
+Before running a large job, test one paper:
 
 ```bash
 python -u scripts/score_with_codex.py \
-  --input examples/example_input.jsonl \
+  --input data/candidates.jsonl \
   --profile configs/my_profile.yaml \
-  --output data/test_score.jsonl \
+  --output data/test_scores.jsonl \
   --failures-output data/test_failures.jsonl \
   --top-k 1 \
-  --codex-cmd "codex exec" \
   --max-new-items 1 \
-  --timeout 900 \
-  --abstract-max-chars 3000
+  --codex-cmd "codex exec"
 ```
 
-A successful run prints something like:
-
-```text
-[RUN ] 1/1 ...
-[OK  ] added=1 rank=... overall=... priority=keep
-[DONE] added=1 output=data/test_score.jsonl
-```
-
----
-
-## Step 4: Run resumable scoring
-
-For a larger run:
+If the test works, run the full scoring job:
 
 ```bash
 nohup python -u scripts/run_autoretry.py \
@@ -236,15 +318,12 @@ nohup python -u scripts/run_autoretry.py \
   --sleep-on-quota 3600 \
   --sleep-on-error 600 \
   --timeout 900 \
-  --abstract-max-chars 3000 \
   > logs/run_idea_scores_$(date +%F-%H%M%S).out 2>&1 &
 ```
 
-The runner writes one JSON object per completed paper. If the run stops, simply rerun the same command. It will skip papers that are already present in the output file.
-
 ---
 
-## Step 5: Monitor progress
+## 📊 Step 4: Check progress
 
 ```bash
 python scripts/check_progress.py \
@@ -252,33 +331,139 @@ python scripts/check_progress.py \
   --target-total 2000
 ```
 
-Or inspect the latest log:
+Or monitor continuously:
 
 ```bash
-tail -f logs/run_idea_scores_*.out
+watch -n 30 'python scripts/check_progress.py --output data/idea_scores.jsonl --target-total 2000'
 ```
 
-Normal messages:
+You can also inspect the latest log:
+
+```bash
+tail -f $(ls -t logs/run_idea_scores_*.out | head -1)
+```
+
+---
+
+## 🏆 Step 5: Export top-ranked papers
+
+Export the top papers to CSV:
+
+```bash
+python scripts/export_rankings.py \
+  --input data/idea_scores.jsonl \
+  --output data/top100_ideas.csv \
+  --top-k 100
+```
+
+You can open the CSV in Excel, Numbers, LibreOffice, or any spreadsheet viewer.
+
+---
+
+## 📤 Output format
+
+Each scored paper contains the original metadata plus LLM-generated idea-level fields.
+
+Example output:
+
+```json
+{
+  "title": "Representation Surgery for Concept Editing",
+  "venue": "ICLR",
+  "year": 2025,
+  "is_suitable": true,
+  "priority": "keep",
+  "idea_core": "The paper identifies editable concept directions in neural representations.",
+  "transferable_mechanism": "Subspace intervention can be reused for controlled representation editing.",
+  "fit_reason": "The mechanism aligns with the user's profile and can be adapted to the target task.",
+  "risk_or_limitation": "The abstract does not show whether the method preserves all task constraints.",
+  "score_overall_fit": 8.0,
+  "score_theory_novelty": 7.0,
+  "scores": {
+    "transferability_to_my_task": 8.0,
+    "method_novelty": 7.0,
+    "implementation_feasibility": 6.0,
+    "expected_research_value": 8.0
+  },
+  "rank_score": 7.55
+}
+```
+
+---
+
+## 🧠 How scoring works
+
+For each candidate paper, IdeaScout prompts the LLM to:
+
+1. Read the paper title and abstract.
+2. Infer the paper’s **core idea**.
+3. Identify the **transferable mechanism**.
+4. Judge whether the idea fits the user-defined research profile.
+5. Assign scores for each custom scoring dimension.
+6. Compute a weighted ranking score.
+
+The LLM is explicitly instructed:
+
+* not to score by keyword overlap only;
+* to focus on transferable mechanisms;
+* to downweight generic benchmarks, surveys, or dataset-only papers;
+* to explain the fit briefly and compactly.
+
+---
+
+## 🧪 Example profiles
+
+IdeaScout includes example profiles for different research directions.
+
+### 🎙️ SpeechPrivacy and accent conversion
 
 ```text
-[RUN ] ...
-[OK  ] added=1 rank=... overall=... priority=...
-[ROUND RESULT] newly_added=1 total_done=...
+configs/profile_speechprivacy_accent_example.yaml
 ```
 
-Quota/rate-limit waiting is also normal:
+This profile looks for ideas related to:
+
+* multi-attribute speech disentanglement
+* selective attribute obfuscation
+* accent conversion
+* representation editing
+* leakage control
+* privacy-utility evaluation
+
+### 🖼️ Computer vision domain adaptation
 
 ```text
-[SLEEP_QUOTA] sleeping 3600s
+configs/profile_cv_domain_adaptation_example.yaml
 ```
 
-Authentication errors require manual login:
+This profile looks for ideas related to:
+
+* domain generalization
+* distribution shift
+* test-time adaptation
+* representation robustness
+* pseudo-labeling
+* feature alignment
+
+These profiles are examples only. You should create your own profile for your own research task.
+
+---
+
+## 🛠️ Troubleshooting
+
+### Codex says the token was invalidated
+
+If you see:
 
 ```text
-[STOP_AUTH] Codex auth/session problem.
+401 Unauthorized
+token_invalidated
+refresh_token_invalidated
+Your session has ended
+Please log in again
 ```
 
-Fix with:
+Run:
 
 ```bash
 codex logout || true
@@ -286,129 +471,110 @@ codex login --device-auth
 printf 'Reply only OK\n' | codex exec -
 ```
 
-Then rerun the same scoring command.
+Then restart the same scoring command. IdeaScout will resume from the existing output file.
 
 ---
 
-## Step 6: Export ranked papers
+### Codex hits usage limits
 
-Export top 100 by the default ranking score:
-
-```bash
-python scripts/export_rankings.py \
-  --input data/idea_scores.jsonl \
-  --profile configs/my_profile.yaml \
-  --output data/top100_overall.csv \
-  --top-k 100
-```
-
-Sort by specific dimensions from your profile:
-
-```bash
-python scripts/export_rankings.py \
-  --input data/idea_scores.jsonl \
-  --profile configs/my_profile.yaml \
-  --output data/top100_transferability.csv \
-  --top-k 100 \
-  --sort-by score_transferability_to_my_task score_overall_fit score_theory_novelty
-```
-
-The exported CSV includes:
-
-- title
-- venue/year
-- URL
-- priority
-- overall fit score
-- profile-specific dimension scores
-- core idea
-- transferable mechanism
-- fit reason
-- risk or limitation
-
----
-
-## Output fields
-
-Each scored paper contains fields like:
-
-```json
-{
-  "is_suitable": true,
-  "priority": "keep",
-  "idea_core": "The paper discovers editable representation subspaces.",
-  "transferable_mechanism": "Subspace intervention can be reused for controlled representation editing.",
-  "fit_reason": "The mechanism aligns with the profile's need for controllable latent interventions.",
-  "risk_or_limitation": "The abstract does not show whether edits preserve all required constraints.",
-  "score_overall_fit": 8,
-  "score_theory_novelty": 7,
-  "scores": {
-    "transferability_to_my_task": 8,
-    "method_novelty": 7
-  },
-  "rank_score": 7.75
-}
-```
-
-Dimension scores are also flattened as:
+If you see:
 
 ```text
-score_transferability_to_my_task
-score_method_novelty
-...
+usage limit
+rate limit
+quota
+too many requests
+```
+
+The auto-retry runner will sleep and continue later:
+
+```text
+[SLEEP_QUOTA] sleeping 3600s
+```
+
+Already processed papers are written to JSONL immediately, so progress is not lost.
+
+---
+
+### The process is running but nothing is printed
+
+Use unbuffered Python:
+
+```bash
+python -u scripts/run_autoretry.py ...
+```
+
+For background jobs, use:
+
+```bash
+nohup python -u scripts/run_autoretry.py ... > logs/run.out 2>&1 &
 ```
 
 ---
 
-## How to adapt it to your own field
+### Check whether the job is still running
 
-You only need to change the YAML profile.
-
-For example, if your research is medical imaging, define dimensions such as:
-
-```yaml
-scoring_dimensions:
-  - key: segmentation_transfer_value
-    description: Whether the idea can improve robust medical image segmentation.
-    weight: 2.0
-  - key: annotation_efficiency
-    description: Whether the idea reduces annotation requirements.
-    weight: 1.5
-  - key: clinical_evaluation_value
-    description: Whether the idea suggests useful clinical evaluation metrics.
-    weight: 1.0
+```bash
+ps -ef | grep -E 'run_autoretry|score_with_codex|codex exec' | grep -v grep
 ```
-
-If your research is recommender systems, define dimensions such as:
-
-```yaml
-scoring_dimensions:
-  - key: user_preference_modeling
-    description: Whether the idea helps model user preferences or intent.
-    weight: 2.0
-  - key: cold_start_or_retrieval_value
-    description: Whether the idea helps retrieval, cold-start, or candidate generation.
-    weight: 1.5
-  - key: online_evaluation_value
-    description: Whether it suggests better online or counterfactual evaluation.
-    weight: 1.0
-```
-
-The toolkit remains the same.
 
 ---
 
-## Notes and limitations
+## 📚 Recommended workflow
 
-- The scorer uses title and abstract by default, not the full PDF.
-- The output is a triage signal, not a final literature review.
-- Scores are meant for ranking and prioritization.
-- Always manually inspect high-ranked papers.
-- If you need full-paper analysis, add a paper-fetching stage and pass extracted method sections into the prompt.
+For a large paper collection, a practical workflow is:
+
+```text
+1. Collect papers from OpenReview, Semantic Scholar, DBLP, or conference websites.
+2. Convert them to JSONL with title and abstract.
+3. Write a research profile for your own task.
+4. Run rule-based filtering to select 1k-5k candidates.
+5. Run LLM scoring with auto-retry.
+6. Export top 50-200 papers.
+7. Manually read only the most promising papers.
+8. Use high-scoring ideas to design new methods or experiments.
+```
 
 ---
 
-## Citation / acknowledgement
+## 🧭 Roadmap
 
-If you use this toolkit, please cite or acknowledge the repository URL once published.
+Planned features:
 
+* [ ] PDF full-text parsing
+* [ ] OpenReview paper collector
+* [ ] Semantic Scholar integration
+* [ ] Web portal for browsing scored papers
+* [ ] Multi-profile comparison
+* [ ] Multi-LLM backend support
+* [ ] Paper clustering by transferable mechanism
+* [ ] BibTeX export
+* [ ] Citation graph support
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome.
+
+Good first contributions include:
+
+* adding new example profiles;
+* improving ranking formulas;
+* adding paper collectors;
+* improving the prompt template;
+* adding visualization or web browsing support.
+
+---
+
+## 📄 License
+
+This project is released under the MIT License.
+
+---
+
+---
+
+## 💡 One-sentence summary
+
+**IdeaScout turns large paper collections into personalized, ranked lists of transferable research ideas.**
