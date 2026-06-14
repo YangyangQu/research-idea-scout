@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🧭 Research idea scout
+# 🧭 IdeaScout
 
-### Profile-Guided Cross-Domain Research Idea Discovery with LLMs
+### Find transferable research ideas from other fields
 
 <p>
   <img src="https://img.shields.io/badge/Python-3.9%2B-blue" alt="Python">
@@ -11,36 +11,78 @@
   <img src="https://img.shields.io/badge/LLM-Codex%20CLI-purple" alt="LLM">
 </p>
 
+**IdeaScout helps researchers discover ideas from other fields that may transfer to their own research problems.**
+
 </div>
 
 ---
 
 ## ✨ What is IdeaScout?
 
-**IdeaScout is a profile-guided toolkit for discovering transferable research ideas from large paper collections.**
+**IdeaScout is a profile-guided toolkit for cross-domain research idea discovery.**
 
-Instead of only finding papers that are already close to your topic, IdeaScout helps answer a more useful research question:
+Most paper search tools help you find papers that are already close to your topic.  
+IdeaScout is designed for a different use case:
 
-> **Can the core idea of this paper transfer to my own research problem?**
+> **Find methods, mechanisms, and ideas from other fields that can be adapted to your own task.**
 
-Users define a **research profile** that describes their target tasks, preferred mechanisms, negative filters, and scoring criteria. IdeaScout then filters candidate papers, asks an LLM to infer each paper's core idea, scores transferability, and provides ranked outputs through both command-line tools and a lightweight web portal.
+For example, a computer vision paper may contain a representation editing idea useful for speech.  
+A robotics paper may contain a temporal modeling idea useful for audio or video.  
+A multimodal learning paper may contain an alignment mechanism useful for another domain.
 
-IdeaScout is designed for researchers who want to mine ideas from **other fields**, not only from papers that share the same task keywords.
+You define your own **research profile**, including your target task, preferred mechanisms, negative filters, and scoring criteria. IdeaScout then filters a large paper collection, asks an LLM to infer each paper's core idea, and ranks papers by how likely their ideas are to transfer to your research direction.
+
+IdeaScout is not a replacement for reading papers.  
+It is a tool for reducing the search space and finding promising cross-domain inspiration.
+
+---
+
+## 🔁 From Other Fields to Your Field
+
+IdeaScout is not meant to answer only:
+
+> Is this paper related to my topic?
+
+Instead, it asks:
+
+> Can this paper's core idea be transferred to my research problem?
+
+This makes it useful for early-stage research ideation. You can use it to mine ideas from fields such as:
+
+- computer vision;
+- natural language processing;
+- multimodal learning;
+- generative modeling;
+- robotics;
+- medical imaging;
+- speech processing;
+- representation learning.
+
+The output is not just a list of similar papers.  
+It is a ranked list of papers whose **ideas may be reusable in your own domain**.
 
 ---
 
 ## 🎯 Why IdeaScout?
 
-Traditional paper search is often topic-driven. It finds papers that are similar to a query, but it may miss papers whose **mechanisms** are useful across domains.
+When doing research, we often do not only need papers that are about the same task.
 
-IdeaScout is useful when you want to:
+We also want to know:
 
-- 🔍 discover **cross-domain transferable ideas**;
-- 🧠 search for **mechanisms**, not just topics;
-- ⚙️ customize screening for **your own research profile**;
-- 📊 rank papers by **transferability, novelty, and feasibility**;
-- 🔁 run large LLM-based scoring jobs with **resume** and **auto-retry**;
-- 🌐 browse scored papers through a lightweight **web portal**.
+- Can a method from another field inspire my own work?
+- Can a mechanism from CV, NLP, multimodal learning, or generative modeling be adapted to my problem?
+- Which papers are worth reading because their ideas are transferable, even if their topics are different?
+
+IdeaScout is built for this type of exploration.
+
+It helps you:
+
+- 🔍 search for **transferable ideas**, not only related papers;
+- 🧠 discover useful mechanisms from **other research fields**;
+- ⚙️ define your own research profile and scoring criteria;
+- 📊 rank papers by transferability, novelty, and feasibility;
+- 🔁 run large LLM-based scoring jobs with resume and auto-retry;
+- 🌐 browse scored papers through a lightweight web portal.
 
 ---
 
@@ -48,6 +90,8 @@ IdeaScout is useful when you want to:
 
 <div align="center">
   <img src="assets/pipeline_overview.png" alt="IdeaScout pipeline overview" width="95%">
+  <br>
+  <em>Overview of the IdeaScout pipeline.</em>
 </div>
 
 IdeaScout separates idea discovery into two stages:
@@ -153,7 +197,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-If you want to use Codex-based scoring, make sure the Codex CLI is available:
+To use Codex-based scoring, make sure the Codex CLI is available:
 
 ```bash
 codex login --device-auth
@@ -443,7 +487,7 @@ Open:
 http://127.0.0.1:8080
 ```
 
-If you are running the portal on a remote server, use SSH port forwarding:
+When running the portal on a remote server, use SSH port forwarding:
 
 ```bash
 ssh -N -L 8080:127.0.0.1:8080 user@server
@@ -610,3 +654,13 @@ This project is released under the **MIT License**.
 
 ---
 
+
+---
+
+<div align="center">
+
+### 💡 One-line Summary
+
+**IdeaScout turns large paper collections into personalized ranked lists of transferable research ideas from other fields.**
+
+</div>
