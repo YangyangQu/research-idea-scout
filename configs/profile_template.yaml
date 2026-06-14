@@ -1,0 +1,65 @@
+name: my_research_profile
+language: English
+
+description: >
+  Replace this with your own research direction. The tool will screen papers from
+  any field and score whether their core ideas can transfer to this direction.
+
+target_tasks:
+  - Describe your main research task here.
+  - Describe a second target task or application here.
+  - Describe the type of method or mechanism you are looking for.
+
+prefer:
+  - Transferable mechanisms rather than surface topic similarity.
+  - Papers with reusable modeling ideas, representation designs, objectives, or evaluation protocols.
+  - Cross-domain ideas that can be adapted to my task.
+
+downweight:
+  - Generic benchmark, dataset, or survey papers without a transferable mechanism.
+  - Papers that are only related by keywords but do not offer a reusable idea.
+  - Pure engineering systems without an identifiable modeling mechanism.
+
+positive_keywords:
+  - representation learning
+  - disentanglement
+  - latent space
+  - controllable generation
+  - diffusion
+  - flow matching
+  - adapter
+  - routing
+  - modular
+  - retrieval
+  - alignment
+  - concept erasure
+  - unlearning
+  - causal
+  - subspace
+  - projection
+  - editing
+  - intervention
+
+negative_keywords:
+  - survey
+  - benchmark
+  - dataset
+  - leaderboard
+  - user study only
+
+scoring_dimensions:
+  - key: transferability_to_my_task
+    description: Whether the paper's core idea can be adapted to my own research task.
+    weight: 2.0
+  - key: method_novelty
+    description: Whether the paper has a genuinely interesting method or theory idea.
+    weight: 1.2
+  - key: representation_or_modeling_value
+    description: Whether the paper contributes a reusable representation, model architecture, objective, or mechanism.
+    weight: 1.5
+  - key: implementation_feasibility
+    description: Whether the idea looks practical enough to implement or test.
+    weight: 1.0
+  - key: evaluation_value
+    description: Whether the paper suggests useful metrics, diagnostics, or evaluation protocols.
+    weight: 0.8

@@ -1,0 +1,49 @@
+name: cv_domain_adaptation_example
+language: English
+
+description: >
+  Example profile for a researcher studying robust visual recognition under domain shift.
+
+target_tasks:
+  - Improve domain generalization for image classifiers.
+  - Separate object-relevant features from domain-specific style or background features.
+  - Build training or inference-time adaptation mechanisms that preserve class semantics.
+
+prefer:
+  - Representation geometry, invariant features, style/content disentanglement, causal features, adapters, and test-time adaptation.
+  - Methods that can be reused in visual recognition, segmentation, or detection.
+
+downweight:
+  - Dataset-only papers.
+  - Pure architecture scaling without a domain-shift mechanism.
+
+positive_keywords:
+  - domain generalization
+  - domain adaptation
+  - invariant representation
+  - causal feature
+  - style transfer
+  - content representation
+  - test-time adaptation
+  - subspace
+  - adapter
+  - robustness
+
+negative_keywords:
+  - dataset
+  - benchmark
+  - survey
+
+scoring_dimensions:
+  - key: domain_generalization_fit
+    description: Helps improve robustness to unseen domains.
+    weight: 2.0
+  - key: content_style_disentanglement
+    description: Helps separate semantic content from style/domain/background factors.
+    weight: 1.5
+  - key: test_time_adaptation_value
+    description: Helps adapt without full retraining.
+    weight: 1.0
+  - key: implementation_feasibility
+    description: Can be implemented in a standard visual recognition pipeline.
+    weight: 1.0

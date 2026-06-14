@@ -1,0 +1,87 @@
+name: speechprivacy_wp2_plus_accent_example
+language: English
+
+description: >
+  Example profile for screening cross-domain papers for SpeechPrivacy, multi-attribute
+  speech disentanglement, selective obfuscation, accent conversion, and speech
+  representation editing. This is only an example; users should write their own profile.
+
+target_tasks:
+  - Multi-attribute speech disentanglement and selective attribute obfuscation.
+  - Accent conversion while preserving linguistic content, speaker identity, intelligibility, and naturalness.
+  - Editing frozen SSL, codec, or generative speech representations using latent directions, subspaces, adapters, retrieval projection, or controllable generation.
+
+prefer:
+  - Attribute-specific representations, modular workers, multi-branch encoders, controllable obfuscation, leakage control, and encoder-decoder resynthesis.
+  - Temporal style transfer, pronunciation/prosody/rhythm control, latent direction editing, subspace projection, retrieval projection, and phoneme-conditioned editing.
+  - Transferable mechanisms from CV, NLP, multimodal learning, diffusion/flow models, representation learning, interpretability, unlearning, modular routing, and temporal modeling.
+
+downweight:
+  - Generic benchmark, dataset, or survey papers.
+  - Pure fairness or subgroup-bias papers without a reusable privacy/editing/disentanglement mechanism.
+  - Pure speech baselines without a transferable idea.
+  - LLM-agent or robotics papers without a representation or editing mechanism.
+
+positive_keywords:
+  - disentanglement
+  - attribute
+  - modular
+  - adapter
+  - routing
+  - mixture of experts
+  - latent editing
+  - representation editing
+  - activation steering
+  - concept erasure
+  - unlearning
+  - subspace
+  - projection
+  - retrieval
+  - alignment
+  - controllable generation
+  - diffusion
+  - flow matching
+  - temporal style
+  - motion style
+  - prosody
+  - rhythm
+  - privacy
+  - leakage
+  - attack
+
+negative_keywords:
+  - survey
+  - benchmark
+  - dataset
+  - leaderboard
+  - subgroup fairness
+  - demographic bias
+
+scoring_dimensions:
+  - key: wp2_multi_attribute_disentanglement
+    description: Helps separate or control multiple attributes in speech-like representations.
+    weight: 1.6
+  - key: selective_obfuscation
+    description: Helps hide or modify selected attributes while preserving others.
+    weight: 1.2
+  - key: attribute_leakage_control
+    description: Helps prevent sensitive or nuisance attributes from leaking into other branches or representations.
+    weight: 1.0
+  - key: accent_conversion
+    description: Helps convert accent while preserving content, speaker identity, naturalness, and intelligibility.
+    weight: 1.6
+  - key: pronunciation_prosody_rhythm_control
+    description: Helps control pronunciation, duration, stress, rhythm, intonation, or prosody.
+    weight: 1.2
+  - key: speech_representation_editing
+    description: Helps edit SSL, codec, latent, or generative speech representations.
+    weight: 1.4
+  - key: latent_editing
+    description: Provides useful latent directions, subspaces, basis discovery, or representation interventions.
+    weight: 1.2
+  - key: resynthesis_or_generation
+    description: Helps decoder-based, diffusion, flow, or codec-based generation/resynthesis.
+    weight: 0.8
+  - key: privacy_utility_evaluation
+    description: Helps design privacy-utility, attack-based, or preservation-aware evaluation.
+    weight: 0.8

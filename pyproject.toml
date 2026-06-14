@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "research-idea-scout"
+version = "0.1.0"
+description = "Configurable cross-domain paper idea screening for arbitrary research directions"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["PyYAML>=6.0"]
+authors = [{name = "Your Name"}]
+license = {text = "MIT"}
+
+[tool.setuptools.packages.find]
+include = ["idea_scout*"]
