@@ -3,13 +3,13 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "research-idea-scout"
+name = "idea-scout"
 version = "0.1.0"
-description = "Configurable cross-domain paper idea screening for arbitrary research directions"
+description = "Profile-guided cross-domain research idea discovery with LLM-based paper scoring"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = ["PyYAML>=6.0"]
-authors = [{name = "Your Name"}]
+authors = [{name = "Yangyang Qu"}]
 license = {text = "MIT"}
 
 [tool.setuptools.packages.find]

@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use IdeaScout in your research, please cite it as below."
+type: software
+title: "IdeaScout: Profile-Guided Cross-Domain Research Idea Discovery"
+authors:
+  - family-names: "Qu"
+    given-names: "Yangyang"
+year: 2026
+license: MIT
+url: "https://github.com/YOUR_USERNAME/idea-scout"
+repository-code: "https://github.com/YOUR_USERNAME/idea-scout"
+abstract: "IdeaScout is a profile-guided toolkit for discovering transferable research ideas from large paper collections using rule-based filtering and LLM-based idea scoring."
+keywords:
+  - research idea discovery
+  - literature mining
+  - cross-domain transfer
+  - LLM
+  - paper screening
