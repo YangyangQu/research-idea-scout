@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Asset Detail · IdeaScout Portal{% endblock %}
+
+{% block content %}
+{% if not asset %}
+  <section class="card panel"><h1>Asset not found</h1><a href="/assets">Back to asset library</a></section>
+{% else %}
+{% set raw = asset.raw or {} %}
+{% set review = raw.llm_review if raw.llm_review else {} %}
+<section class="page-head detail-head">
+  <div>
+    <h1>{{ asset.source_title or asset.challenge }}</h1>
+    <p>{{ asset.asset_type }} · {{ asset.source_venue }} {{ asset.source_year }} · Asset {{ '%.2f'|format(asset.asset_score or 0) }} · LLM {{ review.verdict or 'not reviewed' }}</p>
+  </div>
+  <a class="primary" href="/assets">Back to Assets</a>
+</section>
+
+<section class="detail-grid">
+  <div class="card panel">
+    <h2>Reusable Pattern</h2>
+    <div class="callout">
+      <strong>Problem</strong>
+      <p>{{ asset.challenge or 'N/A' }}</p>
+    </div>
+    <div class="callout">
+      <strong>Solution pattern</strong>
+      <p>{{ asset.solution_pattern or 'N/A' }}</p>
+    </div>
+    <div class="callout">
+      <strong>Mechanism</strong>
+      <p>{{ asset.mechanism or 'N/A' }}</p>
+    </div>
+    {% if raw.insight %}
+    <div class="callout">
+      <strong>Reusable insight</strong>
+      <p>{{ raw.insight.reusable_insight or 'N/A' }}</p>
+    </div>
+    {% endif %}
+    <div class="callout warning">
+      <strong>Why it is hard</strong>
+      <p>{{ asset.why_it_is_hard or 'N/A' }}</p>
+    </div>
+  </div>
+
+  <div class="card panel">
+    <h2>LLM Review</h2>
+    {% if review %}
+    <div class="callout llm-review">
+      <strong>{{ review.verdict or 'unknown' }}{% if review.asset_quality %} · Quality {{ review.asset_quality }}/5{% endif %}{% if review.confidence %} · Confidence {{ '%.2f'|format(review.confidence) }}{% endif %}</strong>
+      {% if review.reusable_insight %}<p>{{ review.reusable_insight }}</p>{% endif %}
+      {% if review.review_notes %}<p>{{ review.review_notes }}</p>{% endif %}
+    </div>
+    <dl class="info">
+      <dt>Code assessment</dt><dd>{{ review.code_assessment or 'unknown' }}</dd>
+      <dt>Reviewed at</dt><dd>{{ review.reviewed_at or 'N/A' }}</dd>
+    </dl>
+    {% else %}
+    <p class="empty">This asset has not been reviewed by an LLM yet.</p>
+    {% endif %}
+
+    <h2 class="section-break">Verification</h2>
+    <dl class="info">
+      <dt>Code status</dt><dd><span class="chip {{ asset.code_status or 'missing' }}">{{ asset.code_status or 'missing' }}</span></dd>
+      <dt>Code URL</dt><dd>{% if asset.code_url %}<a href="{{ asset.code_url }}" target="_blank">{{ asset.code_url }}</a>{% else %}N/A{% endif %}</dd>
+      <dt>Discovery</dt><dd>{{ raw.code.discovery_source or 'N/A' }}{% if raw.code.discovery_confidence %} · {{ raw.code.discovery_confidence }}{% endif %}</dd>
+      <dt>Homepage</dt><dd>{% if raw.code.homepage_url %}<a href="{{ raw.code.homepage_url }}" target="_blank">{{ raw.code.homepage_url }}</a>{% else %}N/A{% endif %}</dd>
+      <dt>PDF status</dt><dd><span class="chip {{ asset.pdf_status or 'missing' }}">{{ asset.pdf_status or 'missing' }}</span></dd>
+      <dt>PDF URL</dt><dd>{% if asset.pdf_url %}<a href="{{ asset.pdf_url }}" target="_blank">{{ asset.pdf_url }}</a>{% else %}N/A{% endif %}</dd>
+      <dt>Source paper</dt><dd>{{ asset.source_title or 'N/A' }}</dd>
+    </dl>
+  </div>
+</section>
+
+<section class="detail-grid">
+  <div class="card panel">
+    <h2>Evidence</h2>
+    {% if review.evidence_quotes %}
+      <h3>LLM evidence quotes</h3>
+      {% for item in review.evidence_quotes %}
+      <div class="callout"><p>{{ item }}</p></div>
+      {% endfor %}
+    {% endif %}
+    {% if raw.evidence %}
+      {% for item in raw.evidence %}
+      <div class="callout"><p>{{ item }}</p></div>
+      {% endfor %}
+    {% else %}
+      <p class="empty">No evidence recorded.</p>
+    {% endif %}
+  </div>
+
+  <div class="card panel">
+    <h2>Limits and Assumptions</h2>
+    <h3>Required assumptions</h3>
+    <ul>
+      {% for item in raw.required_assumptions or [] %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+    <h3>Limitations</h3>
+    <ul>
+      {% for item in raw.limitations or [] %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

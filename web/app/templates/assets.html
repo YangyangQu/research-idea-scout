@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Asset Library · IdeaScout Portal{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <h1>Asset Library</h1>
+  <p>{{ shown }} shown · {{ total }} total</p>
+</section>
+
+<form class="card toolbar" method="get" action="/assets">
+  <input name="q" value="{{ q }}" placeholder="Search challenge, solution, mechanism..." />
+  <select name="code_status">
+    <option value="" {% if not code_status %}selected{% endif %}>All code states</option>
+    {% for v in ["open_source_verified", "repo_found", "missing", "unavailable", "failed"] %}
+    <option value="{{ v }}" {% if code_status == v %}selected{% endif %}>{{ v }}</option>
+    {% endfor %}
+  </select>
+  <select name="pdf_status">
+    <option value="" {% if not pdf_status %}selected{% endif %}>All PDF states</option>
+    {% for v in ["parsed", "missing", "failed"] %}
+    <option value="{{ v }}" {% if pdf_status == v %}selected{% endif %}>{{ v }}</option>
+    {% endfor %}
+  </select>
+  <select name="sort">
+    <option value="asset_score" {% if sort == 'asset_score' %}selected{% endif %}>Asset score</option>
+    <option value="code" {% if sort == 'code' %}selected{% endif %}>Code readiness</option>
+    <option value="evidence" {% if sort == 'evidence' %}selected{% endif %}>Evidence strength</option>
+  </select>
+  <select name="limit">
+    {% for v in [50, 100, 200, 500, 1000] %}
+    <option value="{{ v }}" {% if limit == v %}selected{% endif %}>Top {{ v }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit">Apply</button>
+</form>
+
+<section class="card article-list">
+  {% if assets %}
+    {% for a in assets %}
+      {% set insight = a.raw.insight if a.raw and a.raw.insight else {} %}
+      {% set review = a.raw.llm_review if a.raw and a.raw.llm_review else {} %}
+      <a class="article-row asset-card" href="/assets/{{ a.asset_id }}">
+        <div class="article-main">
+          <h2>{{ loop.index }}. {{ a.source_title or a.challenge }}</h2>
+          <div class="meta">{{ a.source_venue }} {{ a.source_year }} · {{ a.asset_type }} · {{ a.profile_name or 'profile' }}</div>
+          <p><strong>Problem:</strong> {{ a.challenge or 'N/A' }}</p>
+          <p><strong>Method:</strong> {{ a.solution_pattern or a.mechanism or 'N/A' }}</p>
+          {% if insight.reusable_insight %}
+          <p><strong>Reusable insight:</strong> {{ insight.reusable_insight }}</p>
+          {% endif %}
+          <div class="chips">
+            <span class="chip">Asset {{ '%.2f'|format(a.asset_score or 0) }}</span>
+            <span class="chip llm-{{ review.verdict or 'not-reviewed' }}">LLM {{ review.verdict or 'not reviewed' }}{% if review.asset_quality %} · Q{{ review.asset_quality }}{% endif %}{% if review.confidence %} · {{ '%.2f'|format(review.confidence) }}{% endif %}</span>
+            <span class="chip {{ a.code_status or 'missing' }}">Code {{ a.code_status or 'missing' }}</span>
+            <span class="chip {{ a.pdf_status or 'missing' }}">PDF {{ a.pdf_status or 'missing' }}</span>
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+  {% else %}
+    <p class="empty">No assets match the current filters.</p>
+  {% endif %}
+</section>
+{% endblock %}

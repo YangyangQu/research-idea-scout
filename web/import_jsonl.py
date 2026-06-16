@@ -73,6 +73,34 @@ def ensure_db(conn: sqlite3.Connection) -> None:
     conn.execute("CREATE INDEX IF NOT EXISTS idx_articles_rank ON articles(rank_score DESC)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_articles_year ON articles(year DESC)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_articles_priority ON articles(priority)")
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS assets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            asset_id TEXT UNIQUE,
+            asset_type TEXT,
+            profile_name TEXT,
+            challenge TEXT,
+            solution_pattern TEXT,
+            mechanism TEXT,
+            why_it_is_hard TEXT,
+            code_status TEXT,
+            code_url TEXT,
+            pdf_status TEXT,
+            pdf_url TEXT,
+            asset_score REAL,
+            evidence_strength REAL,
+            code_readiness REAL,
+            source_title TEXT,
+            source_venue TEXT,
+            source_year INTEGER,
+            raw_json TEXT
+        )
+        """
+    )
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_assets_score ON assets(asset_score DESC)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_assets_code_status ON assets(code_status)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_assets_pdf_status ON assets(pdf_status)")
 
 
 def import_rows(input_path: Path, db_path: Path, replace: bool = True) -> int:
@@ -124,14 +152,91 @@ def import_rows(input_path: Path, db_path: Path, replace: bool = True) -> int:
     return n
 
 
+
+def looks_like_asset(obj: Dict[str, Any]) -> bool:
+    return bool(obj.get("asset_id") or obj.get("solution_pattern") or obj.get("challenge")) and isinstance(obj.get("code"), dict)
+
+
+def import_asset_rows(input_path: Path, db_path: Path, replace: bool = True) -> int:
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(db_path)
+    ensure_db(conn)
+    if replace:
+        conn.execute("DELETE FROM assets")
+
+    n = 0
+    for obj in read_jsonl(input_path):
+        if not looks_like_asset(obj):
+            continue
+        code = obj.get("code") if isinstance(obj.get("code"), dict) else {}
+        pdf = obj.get("pdf") if isinstance(obj.get("pdf"), dict) else {}
+        scores = obj.get("scores") if isinstance(obj.get("scores"), dict) else {}
+        source = (obj.get("source_papers") or [{}])[0]
+        if not isinstance(source, dict):
+            source = {}
+        row = {
+            "asset_id": as_text(obj.get("asset_id")),
+            "asset_type": as_text(obj.get("asset_type")),
+            "profile_name": as_text(obj.get("profile_name")),
+            "challenge": as_text(obj.get("challenge")),
+            "solution_pattern": as_text(obj.get("solution_pattern")),
+            "mechanism": as_text(obj.get("mechanism")),
+            "why_it_is_hard": as_text(obj.get("why_it_is_hard")),
+            "code_status": as_text(code.get("status")),
+            "code_url": as_text(code.get("url")),
+            "pdf_status": as_text(pdf.get("status")),
+            "pdf_url": as_text(pdf.get("url")),
+            "asset_score": as_float(scores.get("asset_score")),
+            "evidence_strength": as_float(scores.get("evidence_strength")),
+            "code_readiness": as_float(scores.get("code_readiness")),
+            "source_title": as_text(source.get("title")),
+            "source_venue": as_text(source.get("venue")),
+            "source_year": as_int(source.get("year")),
+            "raw_json": json.dumps(obj, ensure_ascii=False),
+        }
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO assets (
+                asset_id, asset_type, profile_name, challenge, solution_pattern, mechanism,
+                why_it_is_hard, code_status, code_url, pdf_status, pdf_url, asset_score,
+                evidence_strength, code_readiness, source_title, source_venue, source_year, raw_json
+            ) VALUES (
+                :asset_id, :asset_type, :profile_name, :challenge, :solution_pattern, :mechanism,
+                :why_it_is_hard, :code_status, :code_url, :pdf_status, :pdf_url, :asset_score,
+                :evidence_strength, :code_readiness, :source_title, :source_venue, :source_year, :raw_json
+            )
+            """,
+            row,
+        )
+        n += 1
+    conn.commit()
+    conn.close()
+    return n
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Import IdeaScout JSONL output into the web portal SQLite database.")
     ap.add_argument("--input", required=True)
     ap.add_argument("--db", default="web/ideascout_portal.db")
-    ap.add_argument("--append", action="store_true", help="Append instead of replacing existing articles.")
+    ap.add_argument("--append", action="store_true", help="Append instead of replacing existing records.")
+    ap.add_argument("--kind", choices=["articles", "assets", "auto"], default="auto")
     args = ap.parse_args()
-    n = import_rows(Path(args.input), Path(args.db), replace=not args.append)
-    print(json.dumps({"input": args.input, "db": args.db, "rows": n}, indent=2))
+    input_path = Path(args.input)
+    if args.kind == "assets":
+        n = import_asset_rows(input_path, Path(args.db), replace=not args.append)
+        kind = "assets"
+    elif args.kind == "articles":
+        n = import_rows(input_path, Path(args.db), replace=not args.append)
+        kind = "articles"
+    else:
+        sample = next(iter(read_jsonl(input_path)), {})
+        if looks_like_asset(sample):
+            n = import_asset_rows(input_path, Path(args.db), replace=not args.append)
+            kind = "assets"
+        else:
+            n = import_rows(input_path, Path(args.db), replace=not args.append)
+            kind = "articles"
+    print(json.dumps({"input": args.input, "db": args.db, "kind": kind, "rows": n}, indent=2))
 
 
 if __name__ == "__main__":

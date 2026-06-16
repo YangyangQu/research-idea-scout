@@ -652,7 +652,53 @@ Good first contributions include:
 
 This project is released under the **MIT License**.
 
+
 ---
+
+## Insight/Method Asset Library
+
+This branch extends IdeaScout from paper ranking to a reusable research asset library.
+
+The asset flow keeps papers as sources, but promotes transferable insights and methods into first-class records:
+
+```bash
+python scripts/extract_assets.py \
+  --input examples/example_input.jsonl \
+  --output data/assets.jsonl \
+  --profile-name my_profile
+
+python scripts/verify_code.py \
+  --input data/assets.jsonl \
+  --output data/assets_with_code.jsonl \
+  --offline
+
+python scripts/ingest_pdf.py \
+  --input data/assets_with_code.jsonl \
+  --output data/assets_with_pdf.jsonl \
+  --work-dir data/pdf_ingest
+
+python scripts/enhance_insights.py \
+  --input data/assets_with_pdf.jsonl \
+  --output data/assets_insight.jsonl
+
+python scripts/llm_review_assets.py \
+  --input data/assets_insight.jsonl \
+  --output data/assets_llm_reviewed.jsonl \
+  --limit 25 \
+  --only-code-status repo_found \
+  --model-command "claude -p --no-session-persistence"
+
+python scripts/export_assets.py \
+  --input data/assets_llm_reviewed.jsonl \
+  --output data/assets.csv
+
+python web/import_jsonl.py \
+  --input data/assets_with_pdf.jsonl \
+  --db web/ideascout_portal.db \
+  --kind assets
+```
+
+Each asset records the challenge, why it is hard, solution pattern, mechanism, assumptions, evidence, limitations, source papers, code verification status, PDF parsing status, and optional LLM review verdict. Missing code or PDF is represented explicitly rather than hidden.
 
 
 ---

@@ -57,6 +57,34 @@ def ensure_db() -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_articles_rank ON articles(rank_score DESC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_articles_year ON articles(year DESC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_articles_priority ON articles(priority)")
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS assets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                asset_id TEXT UNIQUE,
+                asset_type TEXT,
+                profile_name TEXT,
+                challenge TEXT,
+                solution_pattern TEXT,
+                mechanism TEXT,
+                why_it_is_hard TEXT,
+                code_status TEXT,
+                code_url TEXT,
+                pdf_status TEXT,
+                pdf_url TEXT,
+                asset_score REAL,
+                evidence_strength REAL,
+                code_readiness REAL,
+                source_title TEXT,
+                source_venue TEXT,
+                source_year INTEGER,
+                raw_json TEXT
+            )
+            """
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_assets_score ON assets(asset_score DESC)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_assets_code_status ON assets(code_status)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_assets_pdf_status ON assets(pdf_status)")
 
 
 def row_to_dict(row: sqlite3.Row) -> Dict[str, Any]:
@@ -76,6 +104,14 @@ def fetch_all_articles() -> List[Dict[str, Any]]:
     ensure_db()
     with connect() as conn:
         rows = conn.execute("SELECT * FROM articles").fetchall()
+    return [row_to_dict(r) for r in rows]
+
+
+
+def fetch_all_assets() -> List[Dict[str, Any]]:
+    ensure_db()
+    with connect() as conn:
+        rows = conn.execute("SELECT * FROM assets").fetchall()
     return [row_to_dict(r) for r in rows]
 
 
@@ -189,6 +225,45 @@ def filter_articles(
     return out
 
 
+def filter_assets(
+    assets: List[Dict[str, Any]],
+    q: str = "",
+    code_status: str = "",
+    pdf_status: str = "",
+    sort: str = "asset_score",
+) -> List[Dict[str, Any]]:
+    q = (q or "").strip().lower()
+    code_status = (code_status or "").strip().lower()
+    pdf_status = (pdf_status or "").strip().lower()
+
+    def text_blob(a: Dict[str, Any]) -> str:
+        raw = a.get("raw") or {}
+        parts = [
+            a.get("asset_id"), a.get("asset_type"), a.get("challenge"), a.get("solution_pattern"),
+            a.get("mechanism"), a.get("why_it_is_hard"), a.get("source_title"), a.get("source_venue"),
+            raw.get("limitations"), raw.get("evidence"), raw.get("transferable_to"),
+        ]
+        return " ".join(str(x) for x in parts if x).lower()
+
+    out = []
+    for a in assets:
+        if q and q not in text_blob(a):
+            continue
+        if code_status and (a.get("code_status") or "").lower() != code_status:
+            continue
+        if pdf_status and (a.get("pdf_status") or "").lower() != pdf_status:
+            continue
+        out.append(a)
+
+    if sort == "code":
+        out.sort(key=lambda a: score_value(a, "code_readiness"), reverse=True)
+    elif sort == "evidence":
+        out.sort(key=lambda a: score_value(a, "evidence_strength"), reverse=True)
+    else:
+        out.sort(key=lambda a: score_value(a, "asset_score"), reverse=True)
+    return out
+
+
 @app.on_event("startup")
 def on_startup() -> None:
     ensure_db()
@@ -241,6 +316,48 @@ def articles_page(
             "limit": limit,
         },
     )
+
+
+@app.get("/assets", response_class=HTMLResponse)
+def assets_page(
+    request: Request,
+    q: str = Query(""),
+    code_status: str = Query(""),
+    pdf_status: str = Query(""),
+    sort: str = Query("asset_score"),
+    limit: int = Query(100, ge=1, le=1000),
+) -> HTMLResponse:
+    all_assets = fetch_all_assets()
+    filtered = filter_assets(all_assets, q=q, code_status=code_status, pdf_status=pdf_status, sort=sort)[:limit]
+    return templates.TemplateResponse(
+        "assets.html",
+        {
+            "request": request,
+            "assets": filtered,
+            "total": len(all_assets),
+            "shown": len(filtered),
+            "q": q,
+            "code_status": code_status,
+            "pdf_status": pdf_status,
+            "sort": sort,
+            "limit": limit,
+        },
+    )
+
+
+@app.get("/assets/{asset_id}", response_class=HTMLResponse)
+def asset_detail(request: Request, asset_id: str) -> HTMLResponse:
+    ensure_db()
+    with connect() as conn:
+        row = conn.execute("SELECT * FROM assets WHERE asset_id = ?", (asset_id,)).fetchone()
+    if row is None:
+        return templates.TemplateResponse(
+            "asset_detail.html",
+            {"request": request, "asset": None},
+            status_code=404,
+        )
+    asset = row_to_dict(row)
+    return templates.TemplateResponse("asset_detail.html", {"request": request, "asset": asset})
 
 
 @app.get("/articles/{article_id}", response_class=HTMLResponse)

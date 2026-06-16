@@ -88,6 +88,12 @@ button { background: var(--blue); color: white; border-color: var(--blue); font-
 .chip.keep { background: #ecfdf5; color: var(--green); }
 .chip.maybe { background: #fff7ed; color: var(--orange); }
 .chip.drop { background: #fef2f2; color: var(--red); }
+.chip.llm-accept { background: #ecfdf5; color: var(--green); }
+.chip.llm-weak { background: #fff7ed; color: var(--orange); }
+.chip.llm-reject, .chip.llm-failed { background: #fef2f2; color: var(--red); }
+.chip.llm-not-reviewed { background: #f1f5f9; color: var(--muted); }
+.section-break { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+.llm-review { border-left-color: #86efac; }
 .info { display: grid; grid-template-columns: 120px 1fr; gap: 12px; margin: 18px 0 0; }
 .info dt { color: var(--muted); font-weight: 800; }
 .info dd { margin: 0; }
