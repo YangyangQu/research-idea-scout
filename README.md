@@ -212,6 +212,86 @@ OK
 
 ---
 
+## Auto-Collect AI Papers
+
+If you do not already have a paper JSONL file, IdeaScout can collect AI/CS paper
+metadata from public APIs first, then run the same filtering and scoring
+pipeline.
+
+The auto collector is designed as a token-saving funnel:
+
+1. Build a small set of profile-guided queries.
+2. Collect metadata from OpenAlex, Semantic Scholar, and arXiv.
+3. Deduplicate by DOI, arXiv ID, URL, and title.
+4. Apply a cheap metadata/keyword prefilter.
+5. Optionally run Codex only on the final small candidate set.
+
+Collect and prefilter without LLM scoring:
+
+```bash
+python scripts/auto_scout.py \
+  --profile configs/profile_proassist_procedural_assistance.yaml \
+  --preset balanced
+```
+
+Run the full flow, including Codex scoring and CSV export:
+
+```bash
+python scripts/auto_scout.py \
+  --profile configs/profile_proassist_procedural_assistance.yaml \
+  --preset balanced \
+  --score \
+  --import-portal \
+  --codex-cmd "codex.cmd exec"
+```
+
+On macOS/Linux, use `--codex-cmd "codex exec"`.
+
+Presets:
+
+| Preset | Raw collection cap | Prefilter keep | Codex score cap | Best for |
+|---|---:|---:|---:|---|
+| `frugal` | 400 | 80 | 30 | Cheapest quick scan |
+| `balanced` | 1200 | 160 | 80 | Default recommended run |
+| `exploratory` | 3000 | 350 | 200 | Broad ideation |
+
+Useful overrides:
+
+```bash
+python scripts/auto_scout.py \
+  --profile configs/profile_proassist_procedural_assistance.yaml \
+  --preset frugal \
+  --years 2022-2026 \
+  --extra-query "proactive video assistant" \
+  --extra-query "procedural mistake recovery" \
+  --prefilter-keep 100 \
+  --score-top-k 40
+```
+
+The main outputs are:
+
+```text
+data/<profile>_raw_papers.jsonl
+data/<profile>_prefiltered.jsonl
+data/<profile>_idea_scores.jsonl
+data/<profile>_top_ideas.csv
+reports/<profile>_auto_collect_summary.json
+```
+
+For higher Semantic Scholar rate limits, set a free API key:
+
+```bash
+export SEMANTIC_SCHOLAR_API_KEY=...
+```
+
+For OpenAlex polite-pool requests, optionally set:
+
+```bash
+export OPENALEX_MAILTO=you@example.com
+```
+
+---
+
 ## 📝 Input Format
 
 IdeaScout expects a JSONL file where each line is one paper.

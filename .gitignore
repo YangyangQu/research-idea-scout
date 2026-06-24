@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+
+.venv/
+.env
+
+data/
+logs/
+reports/
+configs/generated/
+
+web/*.db

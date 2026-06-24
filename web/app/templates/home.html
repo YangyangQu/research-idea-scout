@@ -1,31 +1,28 @@
 {% extends "base.html" %}
-{% block title %}Home · IdeaScout Portal{% endblock %}
+{% block title %}{{ ui.nav_home }} · {{ ui.app_name }}{% endblock %}
 
 {% block content %}
 <section class="hero card">
   <div>
     <span class="eyebrow">IdeaScout Portal</span>
-    <h1>Browse transferable research ideas.</h1>
-    <p>
-      This portal visualizes IdeaScout outputs. Import a scored JSONL file, then browse papers by
-      transferability, novelty, priority, and custom profile scores.
-    </p>
+    <h1>{{ ui.home_title }}</h1>
+    <p>{{ ui.home_desc }}</p>
   </div>
-  <a class="primary" href="/articles">Open Article Library</a>
+  <a class="primary" href="/articles?lang={{ lang }}">{{ ui.open_library }}</a>
 </section>
 
 <section class="metrics">
-  <div class="metric card"><div class="label">Articles</div><div class="value">{{ n }}</div></div>
-  <div class="metric card"><div class="label">Keep</div><div class="value">{{ keep }}</div></div>
-  <div class="metric card"><div class="label">Average Rank</div><div class="value">{{ '%.2f'|format(avg_rank) }}</div></div>
-  <div class="metric card"><div class="label">Top Score</div><div class="value">{{ '%.2f'|format(top_score) }}</div></div>
+  <div class="metric card"><div class="label">{{ ui.metric_articles }}</div><div class="value">{{ n }}</div></div>
+  <div class="metric card"><div class="label">{{ ui.metric_keep }}</div><div class="value">{{ keep }}</div></div>
+  <div class="metric card"><div class="label">{{ ui.metric_avg }}</div><div class="value">{{ '%.2f'|format(avg_rank) }}</div></div>
+  <div class="metric card"><div class="label">{{ ui.metric_top }}</div><div class="value">{{ '%.2f'|format(top_score) }}</div></div>
 </section>
 
 <section class="grid2">
   <div class="card panel">
     <div class="panel-head">
-      <h2>Top Scoring Dimensions</h2>
-      <span>{{ dimensions|length }} dimensions</span>
+      <h2>{{ ui.score_overview }}</h2>
+      <span>{{ dimensions|length }} {{ ui.dimensions_count }}</span>
     </div>
     {% if dimensions %}
       <div class="topic-list">
@@ -33,45 +30,38 @@
         <div class="topic-row">
           <div>
             <div class="topic-title">{{ d.label }}</div>
-            <div class="muted">Average {{ '%.2f'|format(d.avg) }} · {{ d.high }} papers scored ≥ 7</div>
+            <div class="muted">{{ ui.dimension_avg }} {{ '%.2f'|format(d.avg) }} · {{ d.high }} {{ ui.dimension_high }}</div>
           </div>
         </div>
       {% endfor %}
       </div>
     {% else %}
-      <p class="empty">No score dimensions available yet.</p>
+      <p class="empty">{{ ui.no_dimensions }}</p>
     {% endif %}
   </div>
 
   <div class="card panel">
     <div class="panel-head">
-      <h2>Top Papers</h2>
-      <a href="/articles">View all</a>
+      <h2>{{ ui.reading_queue }}</h2>
+      <a href="/articles?lang={{ lang }}">{{ ui.view_all }}</a>
     </div>
     {% if top_papers %}
       <div class="paper-mini-list">
       {% for p in top_papers %}
-        <a class="paper-mini" href="/articles/{{ p.id }}">
+        <a class="paper-mini" href="/articles/{{ p.id }}?lang={{ lang }}">
           <strong>{{ p.title }}</strong>
-          <span>{{ p.venue }} · {{ p.year }} · Rank {{ '%.2f'|format(p.rank_score or 0) }}</span>
+          <span>{{ p.venue or ui.unknown_source }} · {{ p.year or ui.unknown_year }} · {{ ui.overall_score }} {{ '%.2f'|format(p.rank_score or 0) }}</span>
         </a>
       {% endfor %}
       </div>
     {% else %}
-      <p class="empty">No papers imported yet. Run <code>python web/import_jsonl.py --input data/idea_scores.jsonl</code>.</p>
+      <p class="empty">{{ ui.no_matches }}</p>
     {% endif %}
   </div>
 </section>
 
 <section class="card panel">
-  <h2>How to load data</h2>
-  <pre><code>python web/import_jsonl.py \
-  --input data/idea_scores.jsonl \
-  --db web/ideascout_portal.db
-
-python -m uvicorn web.app.main:app \
-  --host 127.0.0.1 \
-  --port 8080</code></pre>
-  <p class="muted">Current database: {{ db_path }}</p>
+  <h2>{{ ui.current_database }}</h2>
+  <p class="muted">{{ db_path }}</p>
 </section>
 {% endblock %}

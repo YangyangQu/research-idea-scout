@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block title %}{{ ui.nav_scout }} · {{ ui.app_name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div>
+    <h1>{{ ui.scout_title }}</h1>
+    <p>{{ ui.scout_desc }}</p>
+  </div>
+  <a class="primary" href="/articles?lang={{ lang }}">{{ ui.open_results }}</a>
+</section>
+
+<section class="scout-layout">
+  <form id="scout-form" class="card panel scout-form">
+    <label class="field-block">
+      <span>{{ ui.research_direction }}</span>
+      <textarea name="description" rows="8" placeholder="{{ ui.research_placeholder }}" required></textarea>
+    </label>
+
+    <div class="form-grid">
+      <label class="field-block">
+        <span>{{ ui.preset }}</span>
+        <select name="preset">
+          <option value="frugal" selected>frugal</option>
+          <option value="balanced">balanced</option>
+          <option value="exploratory">exploratory</option>
+        </select>
+      </label>
+      <label class="field-block">
+        <span>{{ ui.codex_command }}</span>
+        <input name="codex_cmd" value="{{ default_codex_cmd }}" />
+      </label>
+    </div>
+
+    <div class="check-panel">
+      <strong>{{ ui.data_sources }}</strong>
+      <label><input type="checkbox" name="source" value="openalex" checked /> OpenAlex</label>
+      <label><input type="checkbox" name="source" value="arxiv" checked /> arXiv</label>
+      <label><input type="checkbox" name="source" value="semanticscholar" /> Semantic Scholar</label>
+    </div>
+
+    <div class="check-panel">
+      <strong>{{ ui.pipeline_options }}</strong>
+      <label><input type="checkbox" name="profile_llm" checked /> {{ ui.profile_llm }}</label>
+      <label><input type="checkbox" name="dynamic_anchors" checked /> {{ ui.dynamic_anchors }}</label>
+      <label><input type="checkbox" name="score" checked /> {{ ui.score_with_codex }}</label>
+      <label><input type="checkbox" name="translate" checked /> {{ ui.translate_zh }}</label>
+      <label><input type="checkbox" name="import_portal" checked /> {{ ui.import_portal }}</label>
+    </div>
+
+    <div>
+      <strong>{{ ui.advanced_limits }}</strong>
+      <div class="form-grid limits-grid">
+        <label class="field-block"><span>{{ ui.raw_collect_limit }}</span><input name="raw_collect_limit" type="number" min="1" placeholder="400" /></label>
+        <label class="field-block"><span>{{ ui.prefilter_keep }}</span><input name="prefilter_keep" type="number" min="1" placeholder="80" /></label>
+        <label class="field-block"><span>{{ ui.score_top_k }}</span><input name="score_top_k" type="number" min="1" placeholder="30" /></label>
+      </div>
+    </div>
+
+    <div class="actions-row">
+      <button type="submit">{{ ui.start_pipeline }}</button>
+      <button type="button" id="dry-run-button" class="secondary">{{ ui.dry_run }}</button>
+    </div>
+  </form>
+
+  <aside class="card panel job-console">
+    <div class="panel-head">
+      <h2>{{ ui.job_status }}</h2>
+      <span id="job-badge" class="chip">{{ ui.status_queued }}</span>
+    </div>
+    <p id="job-message" class="muted">{{ ui.job_waiting }}</p>
+
+    <div id="outputs" class="outputs" hidden>
+      <h3>{{ ui.outputs }}</h3>
+      <a class="primary small" href="/articles?lang={{ lang }}">{{ ui.open_results }}</a>
+      <dl id="output-paths" class="path-list"></dl>
+    </div>
+
+    <h3>{{ ui.live_log }}</h3>
+    <pre id="job-log" class="log-box"></pre>
+  </aside>
+</section>
+
+<section class="card panel recent-jobs">
+  <div class="panel-head">
+    <h2>{{ ui.latest_jobs }}</h2>
+  </div>
+  <div class="paper-mini-list" id="recent-jobs">
+    {% if jobs %}
+      {% for job in jobs %}
+        <button class="job-row" data-job-id="{{ job.job_id }}">
+          <strong>{{ job.job_id }}</strong>
+          <span>{{ job.status }} · {{ job.created_at }}</span>
+        </button>
+      {% endfor %}
+    {% else %}
+      <p class="empty">{{ ui.job_waiting }}</p>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+const lang = {{ lang|tojson }};
+const statusLabels = {
+  queued: {{ ui.status_queued|tojson }},
+  running: {{ ui.status_running|tojson }},
+  done: {{ ui.status_done|tojson }},
+  failed: {{ ui.status_failed|tojson }},
+};
+
+const form = document.getElementById("scout-form");
+const dryRunButton = document.getElementById("dry-run-button");
+const badge = document.getElementById("job-badge");
+const message = document.getElementById("job-message");
+const logBox = document.getElementById("job-log");
+const outputs = document.getElementById("outputs");
+const outputPaths = document.getElementById("output-paths");
+let activeJob = "";
+let pollTimer = 0;
+
+function checked(name) {
+  const el = form.elements[name];
+  return Boolean(el && el.checked);
+}
+
+function positiveInt(name) {
+  const raw = String(form.elements[name]?.value || "").trim();
+  if (!raw) return null;
+  const value = Number.parseInt(raw, 10);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function selectedSources() {
+  return Array.from(form.querySelectorAll('input[name="source"]:checked')).map((el) => el.value);
+}
+
+function payload(dryRun) {
+  return {
+    description: form.elements.description.value.trim(),
+    preset: form.elements.preset.value,
+    codex_cmd: form.elements.codex_cmd.value.trim(),
+    sources: selectedSources(),
+    profile_llm: checked("profile_llm"),
+    dynamic_anchors: checked("dynamic_anchors"),
+    score: checked("score"),
+    translate: checked("translate"),
+    import_portal: checked("import_portal"),
+    dry_run: dryRun,
+    raw_collect_limit: positiveInt("raw_collect_limit"),
+    prefilter_keep: positiveInt("prefilter_keep"),
+    score_top_k: positiveInt("score_top_k"),
+  };
+}
+
+function setStatus(status) {
+  badge.textContent = statusLabels[status] || status;
+  badge.className = `chip status-${status}`;
+}
+
+function renderOutputs(paths) {
+  outputPaths.replaceChildren();
+  if (!paths) {
+    outputs.hidden = true;
+    return;
+  }
+  outputs.hidden = false;
+  for (const key of ["profile", "raw", "prefiltered", "scores", "bilingual_scores", "csv", "db", "manifest"]) {
+    if (!paths[key]) continue;
+    const dt = document.createElement("dt");
+    dt.textContent = key;
+    const dd = document.createElement("dd");
+    dd.textContent = paths[key];
+    outputPaths.append(dt, dd);
+  }
+}
+
+async function poll(jobId) {
+  const response = await fetch(`/api/scout/jobs/${jobId}`);
+  if (!response.ok) return;
+  const data = await response.json();
+  activeJob = jobId;
+  setStatus(data.status);
+  message.textContent = data.error || `${data.job_id} · ${data.created_at || ""}`;
+  logBox.textContent = data.log_tail || "";
+  logBox.scrollTop = logBox.scrollHeight;
+  renderOutputs(data.manifest && data.manifest.paths);
+  if (data.status === "queued" || data.status === "running") {
+    pollTimer = window.setTimeout(() => poll(jobId), 1800);
+  }
+}
+
+async function startJob(dryRun) {
+  window.clearTimeout(pollTimer);
+  setStatus("queued");
+  message.textContent = "Starting...";
+  logBox.textContent = "";
+  renderOutputs(null);
+  const response = await fetch("/api/scout/jobs", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(payload(dryRun)),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    setStatus("failed");
+    message.textContent = data.error || "Failed to start job.";
+    return;
+  }
+  poll(data.job_id);
+}
+
+form.addEventListener("submit", (event) => {
+  event.preventDefault();
+  startJob(false);
+});
+dryRunButton.addEventListener("click", () => startJob(true));
+document.querySelectorAll(".job-row").forEach((button) => {
+  button.addEventListener("click", () => poll(button.dataset.jobId));
+});
+</script>
+{% endblock %}

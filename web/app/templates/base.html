@@ -1,17 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ 'zh-CN' if lang == 'zh' else 'en' }}">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{% block title %}IdeaScout Portal{% endblock %}</title>
+  <title>{% block title %}{{ ui.app_name }}{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}" />
 </head>
 <body>
   <nav class="topbar">
-    <a class="brand" href="/">🧭 IdeaScout Portal</a>
+    <a class="brand" href="/?lang={{ lang }}">🧭 {{ ui.app_name }}</a>
     <div class="navlinks">
-      <a href="/">Home</a>
-      <a href="/articles">Article Library</a>
+      <a href="/?lang={{ lang }}">{{ ui.nav_home }}</a>
+      <a href="/articles?lang={{ lang }}">{{ ui.nav_articles }}</a>
+      <a href="/scout?lang={{ lang }}">{{ ui.nav_scout }}</a>
+      <a href="{{ switch_url }}">{{ ui.language_switch }}</a>
       <a href="https://github.com/YOUR_USERNAME/idea-scout" target="_blank">GitHub</a>
     </div>
   </nav>
@@ -21,7 +23,7 @@
   </main>
 
   <footer class="footer">
-    IdeaScout · Profile-Guided Cross-Domain Research Idea Discovery
+    {{ ui.footer }}
   </footer>
 </body>
 </html>

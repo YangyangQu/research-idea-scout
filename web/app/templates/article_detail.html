@@ -1,54 +1,54 @@
 {% extends "base.html" %}
-{% block title %}Article Detail · IdeaScout Portal{% endblock %}
+{% block title %}{{ ui.nav_articles }} · {{ ui.app_name }}{% endblock %}
 
 {% block content %}
 {% if not article %}
-  <section class="card panel"><h1>Article not found</h1><a href="/articles">Back to article library</a></section>
+  <section class="card panel"><h1>{{ ui.paper_not_found }}</h1><a href="/articles?lang={{ lang }}">{{ ui.back_library }}</a></section>
 {% else %}
 <section class="page-head detail-head">
   <div>
     <h1>{{ article.title }}</h1>
-    <p>{{ article.venue }} · {{ article.year }} · {{ article.profile_name or 'profile' }}</p>
+    <p>{{ article.venue or ui.unknown_source }} · {{ article.year or ui.unknown_year }} · {{ article.profile_name or 'profile' }}</p>
   </div>
-  <a class="primary" href="/articles">Back to Library</a>
+  <a class="primary" href="/articles?lang={{ lang }}">{{ ui.back_library }}</a>
 </section>
 
 <section class="detail-grid">
   <div class="card panel">
-    <h2>Basic Information</h2>
+    <h2>{{ ui.metadata }}</h2>
     <dl class="info">
-      <dt>Authors</dt><dd>{{ article.authors or 'N/A' }}</dd>
-      <dt>Priority</dt><dd><span class="chip {{ article.priority or 'maybe' }}">{{ article.priority or 'maybe' }}</span></dd>
-      <dt>Source</dt><dd>{{ article.venue or 'N/A' }}</dd>
-      <dt>Year</dt><dd>{{ article.year or 'N/A' }}</dd>
-      <dt>Link</dt><dd>{% if article.url %}<a href="{{ article.url }}" target="_blank">Open paper ↗</a>{% else %}N/A{% endif %}</dd>
+      <dt>{{ ui.authors }}</dt><dd>{{ article.authors or ui.none }}</dd>
+      <dt>{{ ui.priority }}</dt><dd><span class="chip {{ article.priority or 'maybe' }}">{{ article.priority_label }}</span></dd>
+      <dt>{{ ui.source }}</dt><dd>{{ article.venue or ui.none }}</dd>
+      <dt>{{ ui.year }}</dt><dd>{{ article.year or ui.none }}</dd>
+      <dt>{{ ui.link }}</dt><dd>{% if article.url %}<a href="{{ article.url }}" target="_blank">{{ ui.open_paper }}</a>{% else %}{{ ui.none }}{% endif %}</dd>
     </dl>
   </div>
 
   <div class="card panel">
-    <h2>Research Judgment Signals</h2>
+    <h2>{{ ui.why_read }}</h2>
     <div class="callout">
-      <strong>Core idea</strong>
-      <p>{{ article.idea_core or 'N/A' }}</p>
+      <strong>{{ ui.core_idea }}</strong>
+      <p>{{ article.idea_core or ui.none }}</p>
     </div>
     <div class="callout">
-      <strong>Transferable mechanism</strong>
-      <p>{{ article.transferable_mechanism or 'N/A' }}</p>
+      <strong>{{ ui.transferable_mechanism }}</strong>
+      <p>{{ article.transferable_mechanism or ui.none }}</p>
     </div>
     <div class="callout">
-      <strong>Fit reason</strong>
-      <p>{{ article.fit_reason or 'N/A' }}</p>
+      <strong>{{ ui.fit_reason }}</strong>
+      <p>{{ article.fit_reason or ui.none }}</p>
     </div>
     <div class="callout warning">
-      <strong>Risk or limitation</strong>
-      <p>{{ article.risk_or_limitation or 'N/A' }}</p>
+      <strong>{{ ui.risk }}</strong>
+      <p>{{ article.risk_or_limitation or ui.none }}</p>
     </div>
   </div>
 </section>
 
 <section class="detail-grid">
   <div class="card panel">
-    <h2>Scores</h2>
+    <h2>{{ ui.score_breakdown }}</h2>
     <div class="score-grid">
       {% for name, value in scores %}
       <div class="score-box">
@@ -60,8 +60,8 @@
   </div>
 
   <div class="card panel">
-    <h2>Abstract</h2>
-    <p class="abstract">{{ article.abstract or 'No abstract available.' }}</p>
+    <h2>{{ ui.abstract }}</h2>
+    <p class="abstract">{{ article.abstract or ui.none }}</p>
   </div>
 </section>
 {% endif %}

@@ -1,52 +1,57 @@
 {% extends "base.html" %}
-{% block title %}Article Library · IdeaScout Portal{% endblock %}
+{% block title %}{{ ui.nav_articles }} · {{ ui.app_name }}{% endblock %}
 
 {% block content %}
 <section class="page-head">
-  <h1>Article Library</h1>
-  <p>{{ shown }} shown · {{ total }} total</p>
+  <h1>{{ ui.article_library }}</h1>
+  <p>{{ ui.shown_total.format(shown=shown, total=total) }}</p>
 </section>
 
 <form class="card toolbar" method="get" action="/articles">
-  <input name="q" value="{{ q }}" placeholder="Search title, idea, mechanism, venue..." />
+  <input type="hidden" name="lang" value="{{ lang }}" />
+  <input name="q" value="{{ q }}" placeholder="{{ ui.search_placeholder }}" />
   <select name="priority">
-    <option value="" {% if not priority %}selected{% endif %}>All priorities</option>
-    <option value="keep" {% if priority == 'keep' %}selected{% endif %}>keep</option>
-    <option value="maybe" {% if priority == 'maybe' %}selected{% endif %}>maybe</option>
-    <option value="drop" {% if priority == 'drop' %}selected{% endif %}>drop</option>
+    <option value="" {% if not priority %}selected{% endif %}>{{ ui.all_priorities }}</option>
+    <option value="keep" {% if priority == 'keep' %}selected{% endif %}>{{ priority_labels.keep }}</option>
+    <option value="maybe" {% if priority == 'maybe' %}selected{% endif %}>{{ priority_labels.maybe }}</option>
+    <option value="drop" {% if priority == 'drop' %}selected{% endif %}>{{ priority_labels.drop }}</option>
   </select>
   <select name="sort">
-    <option value="rank_score" {% if sort == 'rank_score' %}selected{% endif %}>Rank score</option>
-    <option value="overall" {% if sort == 'overall' %}selected{% endif %}>Overall fit</option>
-    <option value="novelty" {% if sort == 'novelty' %}selected{% endif %}>Novelty</option>
-    <option value="year" {% if sort == 'year' %}selected{% endif %}>Year</option>
+    <option value="rank_score" {% if sort == 'rank_score' %}selected{% endif %}>{{ ui.sort_rank }}</option>
+    <option value="overall" {% if sort == 'overall' %}selected{% endif %}>{{ ui.sort_overall }}</option>
+    <option value="novelty" {% if sort == 'novelty' %}selected{% endif %}>{{ ui.sort_novelty }}</option>
+    <option value="year" {% if sort == 'year' %}selected{% endif %}>{{ ui.sort_year }}</option>
   </select>
   <select name="limit">
     {% for v in [50, 100, 200, 500, 1000] %}
-    <option value="{{ v }}" {% if limit == v %}selected{% endif %}>Top {{ v }}</option>
+    <option value="{{ v }}" {% if limit == v %}selected{% endif %}>{{ ui.top_n.format(n=v) }}</option>
     {% endfor %}
   </select>
-  <button type="submit">Apply</button>
+  <button type="submit">{{ ui.apply_filters }}</button>
 </form>
 
 <section class="card article-list">
   {% if articles %}
     {% for p in articles %}
-      <a class="article-row" href="/articles/{{ p.id }}">
+      <a class="article-row" href="/articles/{{ p.id }}?lang={{ lang }}">
         <div class="article-main">
           <h2>{{ loop.index }}. {{ p.title }}</h2>
-          <div class="meta">{{ p.venue }} · {{ p.year }} · {{ p.profile_name or 'profile' }}</div>
-          <p>{{ p.idea_core or p.transferable_mechanism or 'No idea summary available.' }}</p>
+          <div class="meta">{{ p.venue or ui.unknown_source }} · {{ p.year or ui.unknown_year }} · {{ p.profile_name or 'profile' }}</div>
+          <p>{{ p.idea_core or p.transferable_mechanism or ui.no_summary }}</p>
+          {% if p.transferable_mechanism %}
+          <p class="mechanism">{{ ui.mechanism_prefix }} {{ p.transferable_mechanism }}</p>
+          {% endif %}
           <div class="chips">
-            <span class="chip {{ p.priority or 'maybe' }}">{{ p.priority or 'maybe' }}</span>
-            <span class="chip">Rank {{ '%.2f'|format(p.rank_score or 0) }}</span>
-            <span class="chip">Overall {{ '%.2f'|format(p.score_overall_fit or 0) }}</span>
+            <span class="chip {{ p.priority or 'maybe' }}">{{ p.priority_label }}</span>
+            <span class="chip">{{ ui.overall_score }} {{ '%.2f'|format(p.rank_score or 0) }}</span>
+            <span class="chip">{{ ui.fit_score }} {{ '%.2f'|format(p.score_overall_fit or 0) }}</span>
+            <span class="chip">{{ ui.novelty_score }} {{ '%.2f'|format(p.score_theory_novelty or 0) }}</span>
           </div>
         </div>
       </a>
     {% endfor %}
   {% else %}
-    <p class="empty">No papers match the current filters.</p>
+    <p class="empty">{{ ui.no_matches }}</p>
   {% endif %}
 </section>
 {% endblock %}

@@ -109,6 +109,8 @@ def run_codex(prompt: str, codex_cmd: str, timeout: int) -> Tuple[int, str, str]
         cmd,
         input=prompt,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         timeout=timeout,
