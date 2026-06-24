@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -25,6 +25,24 @@ class Profile:
     prefer: List[str]
     downweight: List[str]
     language: str = "English"
+    topic_anchors: Dict[str, List[str]] = field(default_factory=dict)
+
+
+def _string_list(value: Any) -> List[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list):
+        return [str(x) for x in value if str(x).strip()]
+    return [str(value)]
+
+
+def normalize_topic_anchors(value: Any) -> Dict[str, List[str]]:
+    if not isinstance(value, dict):
+        return {}
+    allowed = {"high_value", "required_any", "broad_ai", "off_topic_domains"}
+    return {key: _string_list(value.get(key)) for key in allowed if _string_list(value.get(key))}
 
 
 def load_profile(path: str | Path) -> Profile:
@@ -56,6 +74,7 @@ def load_profile(path: str | Path) -> Profile:
         prefer=[str(x) for x in raw.get("prefer", [])],
         downweight=[str(x) for x in raw.get("downweight", [])],
         language=str(raw.get("language", "English")),
+        topic_anchors=normalize_topic_anchors(raw.get("topic_anchors")),
     )
 
 

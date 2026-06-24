@@ -81,6 +81,7 @@ def import_rows(input_path: Path, db_path: Path, replace: bool = True) -> int:
     ensure_db(conn)
     if replace:
         conn.execute("DELETE FROM articles")
+        conn.execute("DELETE FROM sqlite_sequence WHERE name = 'articles'")
 
     n = 0
     for obj in read_jsonl(input_path):
